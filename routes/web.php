@@ -6,6 +6,8 @@ use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
+use App\Http\Controllers\DevicesController;
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -14,6 +16,14 @@ Route::get('/', function () {
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+Route::resource('devices', DevicesController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('index', 'devices');
+
+Route::resource('users', UserController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('index', 'users');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
