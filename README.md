@@ -27,26 +27,42 @@ composer run dev
 ```
 npm install
 ```
+<p>
+<h2>How To Use</h2>
+<p>1. Run Build</p>
 
-<p>5. Run Locally</p>
+```
+npm run build
+```
+
+<p>2. Open Dashboard Controller and Find line </p>
+
+```
+$ip = '<your-router-ip>'; -> by Mikrotik default configuration it will use "192.168.88.1"
+$username = '<your-username>'; -> by Mikrotik default configuration it will use "admin"
+$password = '<your-password>'; -> by Mikrotik default configuration it will use nothing
+```
+
+<p>2. Run Locally</p>
 
 ```
 composer run dev
 ```
-
-<p>6. Run as Host (Optional)</p>
+or
 
 ```
-php artisan serve --host=(your-device-ip) --port=8080
+php artisan serve 
 ```
-
-  
-  
+and 
+```
+npm run dev
+```
+<p></p>
 <h2>💻 Built with</h2>
 
 Technologies used in the project:
 
 *   Laravel 12.x
 *   Livewire Starter Kit
-*   routeros-api-php
+*   RouterOS-API
 *   Blade
