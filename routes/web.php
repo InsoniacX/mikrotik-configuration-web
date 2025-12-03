@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -8,14 +9,15 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\DevicesController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\MikrotikController;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::view('/', 'welcome')->name('home');
 
-Route::view('dashboard', 'dashboard')
+Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+// Route::get('/dashboard', [MikrotikController::class])-> name('router-info');
 
 Route::resource('devices', DevicesController::class)
     ->middleware(['auth', 'verified'])
@@ -43,3 +45,7 @@ Route::middleware(['auth'])->group(function () {
         )
         ->name('two-factor.show');
 });
+
+// API Routes
+Route::get('/api/router-data', [MikrotikController::class, 'getRealtimeData']);
+Route::get('/api/traffic-data', [MikrotikController::class, 'getTrafficData']);

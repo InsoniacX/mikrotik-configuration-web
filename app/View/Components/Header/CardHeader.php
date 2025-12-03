@@ -1,19 +1,23 @@
 <?php
 
-namespace App\View\Components;
+namespace App\View\Components\Header;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class layouts.header extends Component
+class CardHeader extends Component
 {
     /**
      * Create a new component instance.
      */
-    public function __construct()
+    public $icon;
+    public $title;
+
+    public function __construct($icon = null, $title = null)
     {
-        //
+        $this->title = $title;
+        $this->icon = $icon;
     }
 
     /**
@@ -21,6 +25,6 @@ class layouts.header extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.layouts.header');
+        return view('components.header.card-header');
     }
 }
