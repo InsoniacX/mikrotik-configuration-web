@@ -11,7 +11,7 @@ use App\Http\Controllers\DevicesController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\MikrotikController;
 
-Route::get('/', [MikrotikController::class, 'index'])->name('debug');
+Route::view('/', 'welcome')->name('home');
 
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -46,4 +46,5 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 });
 
-// Route::get('dashboard', [MikrotikController::class, 'index'])->name('dashboard');
+// API Routes
+Route::get('/api/router-data', [MikrotikController::class, 'getRealtimeData']);

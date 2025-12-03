@@ -7,44 +7,85 @@ use Illuminate\Http\Request;
 
 class MikrotikController extends Controller
 {
+    private $ip = '172.16.0.237';
+    private $username = 'InscX';
+    private $password = 'DiniNurAziza@12345#';
+
+    private function getApi()
+    {
+        $api = new RouterosAPI();
+        $api->debug(false);
+        return $api;
+    }
+
+    private function formatSize($bytes, $total = null)
+    {
+        $gb = round($bytes / 1024 / 1024 / 1024, 2);
+        return $total
+            ? "{$gb} GB Free of " . round($total / 1024 / 1024 / 1024, 2) . " GB"
+            : "{$gb} GB";
+    }
+
+    private function fetchLogs($api)
+    {
+        $logs = $api->comm('/log/print');
+        return isset($logs['! trap']) ?  [] : array_slice(array_reverse($logs), 0, 10);
+    }
+
     public function index()
     {
-        $ip = '172.16.0.237';
-        $username = 'InscX';
-        $password = 'DiniNurAziza@12345#';
-        $api = new RouterosAPI();
-        $api->debug('false');
+        $api = $this->getApi();
 
-        $identity = $api->comm('/system/identity/print');
-        $model = $api->comm('/system/resource/print');
-        $uptime = $api->comm('/system/resource/print');
-        $date = $api->comm('/system/clock/print');
-        $time = $api->comm('/system/clock/print');
-        $cpu = $api->comm('/system/resource/print');
-        $memory = $api->comm('/system/resource/print');
-        $disk = $api->comm('/system/resource/print');
-        $temperature = $api->comm('/system/health/print');
-        $version = $api->comm('/system/resource/print');
-        $isrouterboard = $api->comm('/system/routerboard/print');
-        $boardmodel = $api->comm('/system/routerboard/print');
+        if (!$api->connect($this->ip, $this->username, $this->password)) {
+            return view('dashboard')->with('error', 'Koneksi Gagal! ');
+        }
 
-        $data = [
-            'ip' => $ip,
-            'username' => $username,
-            'password' => $password,
-            'identity' => $identity[0]['name'],
-            'model' => $model[0]['board-name'],
-            'uptime' => $uptime[0]['uptime'],
-            'date' => $date[0]['date'],
-            'time' => $time[0]['time'],
-            'cpu' => $cpu[0]['cpu-load'] . '%',
-            'memory' => round($memory[0]['free-memory'] / 1024 / 1024, 2) . ' GB Free of ' . round($memory[0]['total-memory'] / 1024 / 1024, 2) . ' GB',
-            'disk' => round($disk[0]['free-hdd-space'] / 1024 / 1024 / 1024, 2) . ' GB Free of ' . round($disk[0]['total-hdd-space'] / 1024 / 1024 / 1024, 2) . ' GB',
-            'temperature' => $temperature[1]['value'] . ' °C',
-            'version' => $version[0]['version'],
-            'boardmodel' => $boardmodel[0]['model'],
-            'isrouterboard' => $isrouterboard[0]['routerboard'],
-        ];
-        dd($data);
+        $resource = $api->comm('/system/resource/print')[0] ?? [];
+        $clock = $api->comm('/system/clock/print')[0] ?? [];
+        $identity = $api->comm('/system/identity/print')[0] ?? [];
+        $routerboard = $api->comm('/system/routerboard/print')[0] ?? [];
+        $health = $api->comm('/system/health/print');
+
+        return view('dashboard', [
+            'identity' => $identity['name'] ?? 'N/A',
+            'model' => $resource['board-name'] ?? 'N/A',
+            'uptime' => $resource['uptime'] ?? 'N/A',
+            'date' => $clock['date'] ??  date('Y-m-d'),
+            'time' => $clock['time'] ?? date('H:i:s'),
+            'cpu' => ($resource['cpu-load'] ?? 0) .  '%',
+            'memory' => $this->formatSize($resource['free-memory'] ?? 0, $resource['total-memory'] ??  0),
+            'disk' => $this->formatSize($resource['free-hdd-space'] ?? 0, $resource['total-hdd-space'] ?? 0),
+            'temperature' => ($health[1]['value'] ?? 'N/A') . ' °C',
+            'version' => $resource['version'] ?? 'N/A',
+            'boardmodel' => $routerboard['model'] ?? 'N/A',
+            'isrouterboard' => $routerboard['routerboard'] ?? 'false',
+            'logs' => $this->fetchLogs($api),
+        ]);
+    }
+
+    public function getRealtimeData()
+    {
+        $api = $this->getApi();
+
+        if (!$api->connect($this->ip, $this->username, $this->password)) {
+            return response()->json(['error' => 'Connection failed'], 500);
+        }
+
+        $resource = $api->comm('/system/resource/print')[0] ?? [];
+        $clock = $api->comm('/system/clock/print')[0] ?? [];
+        $identity = $api->comm('/system/identity/print')[0] ?? [];
+        $routerboard = $api->comm('/system/routerboard/print')[0] ?? [];
+
+        return response()->json([
+            'date' => $clock['date'] ??  date('Y-m-d'),
+            'time' => $clock['time'] ?? date('H:i:s'),
+            'uptime' => $resource['uptime'] ?? '0s',
+            'boardName' => $identity['name'] ?? 'N/A',
+            'model' => $routerboard['model'] ?? 'N/A',
+            'osVersion' => $resource['version'] ?? 'N/A',
+            'cpu' => ($resource['cpu-load'] ?? 0) . '%',
+            'memory' => $this->formatSize($resource['free-memory'] ?? 0, $resource['total-memory'] ?? 0),
+            'disk' => $this->formatSize($resource['free-hdd-space'] ?? 0, $resource['total-hdd-space'] ?? 0),
+        ]);
     }
 }
