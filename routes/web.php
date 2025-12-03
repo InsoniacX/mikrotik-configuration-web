@@ -48,3 +48,4 @@ Route::middleware(['auth'])->group(function () {
 
 // API Routes
 Route::get('/api/router-data', [MikrotikController::class, 'getRealtimeData']);
+Route::get('/api/traffic-data', [MikrotikController::class, 'getTrafficData']);

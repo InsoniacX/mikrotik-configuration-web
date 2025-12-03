@@ -11,6 +11,9 @@ class MikrotikController extends Controller
     private $username = 'InscX';
     private $password = 'DiniNurAziza@12345#';
 
+    /**
+     * Get RouterOS API Instance.
+     */
     private function getApi()
     {
         $api = new RouterosAPI();
@@ -63,6 +66,9 @@ class MikrotikController extends Controller
         ]);
     }
 
+    /**
+     * Get real-time Router Specific Data.
+     */
     public function getRealtimeData()
     {
         $api = $this->getApi();
@@ -87,5 +93,36 @@ class MikrotikController extends Controller
             'memory' => $this->formatSize($resource['free-memory'] ?? 0, $resource['total-memory'] ?? 0),
             'disk' => $this->formatSize($resource['free-hdd-space'] ?? 0, $resource['total-hdd-space'] ?? 0),
         ]);
+    }
+
+    /**
+     * Get real-time Traffic Data.
+     */
+    public function getTrafficData()
+    {
+        $api = $this->getApi();
+
+        if (!$api->connect($this->ip, $this->username, $this->password)) {
+            return response()->json(['error' => 'Connection failed'], 500);
+        }
+
+        $interfaces = $api->comm('/interface/print');
+        $trafficData = [];
+
+        foreach ($interfaces as $interface) {
+            $name = $interface['name'];
+            $stats = $api->comm('/interface/monitor-traffic', [
+                'interface' => $name,
+                'once' => '',
+            ])[0] ?? [];
+
+            $trafficData[] = [
+                'interface' => $name,
+                'rx-byte' => isset($stats['rx-byte']) ? round($stats['rx-byte'] / 1024 / 1024, 2) : 0,
+                'tx-byte' => isset($stats['tx-byte']) ? round($stats['tx-byte'] / 1024 / 1024, 2) : 0,
+            ];
+        }
+
+        return response()->json($trafficData);
     }
 }

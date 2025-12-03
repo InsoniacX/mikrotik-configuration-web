@@ -10,6 +10,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "arielmejiadev/larapex-charts": "^2.1",
+        "consoletvs/charts": "6.*",
         "evilfreelancer/routeros-api-php": "^1.6",
         "laravel/fortify": "^1.30",
         "laravel/framework": "^12.0",
